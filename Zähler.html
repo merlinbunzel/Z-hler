@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zähler</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #555;
+    --accent: #e8ff47;
+    --red: #f87171;
+    --green: #4ade80;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 60px;
+  }
+
+  .login-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .role-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 16px 24px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    user-select: none;
+  }
+
+  .role-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .role-card.selected { border-color: var(--accent); box-shadow: 0 0 24px #e8ff4733; }
+
+  .role-icon { font-size: 36px; margin-bottom: 10px; }
+
+  .role-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .role-desc { font-size: 10px; color: var(--muted); letter-spacing: 1px; line-height: 1.6; }
+
+  .pw-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .pw-field.visible { display: block; }
+
+  .pw-field label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .pw-field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    letter-spacing: 4px;
+  }
+
+  .pw-field input:focus { border-color: var(--accent); }
+
+  .pw-error { font-size: 11px; color: var(--red); margin-top: 8px; letter-spacing: 1px; display: none; }
+
+  .login-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0e0e0e;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .login-btn:active { transform: scale(0.98); }
+  .login-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── APP ── */
+  #app { display: none; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 4px; color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .role-badge {
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .role-badge.admin { background: #e8ff4722; color: var(--accent); border: 1px solid var(--accent); }
+  .role-badge.guest { background: #ffffff11; color: var(--muted); border: 1px solid var(--border); }
+
+  .live { font-size: 10px; letter-spacing: 3px; color: var(--green); display: flex; align-items: center; gap: 6px; }
+  .live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.8s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100px;
+  }
+
+  .card.active { border-color: var(--accent); box-shadow: 0 0 24px #e8ff4733; transform: scale(1.03); }
+  .card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; text-align: center; width: 100%; }
+  .card.active .card-label { color: var(--accent); }
+  .card-value { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; color: var(--text); }
+  .card.active .card-value { color: var(--accent); }
+  .card.flash-up .card-value { animation: bumpUp 0.2s ease; }
+  .card.flash-down .card-value { animation: bumpDown 0.2s ease; }
+
+  @keyframes bumpUp {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); color: var(--green); }
+    100% { transform: scale(1); }
+  }
+  @keyframes bumpDown {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.8); color: var(--red); }
+    100% { transform: scale(1); }
+  }
+
+  .add-card {
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 16px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    color: var(--muted);
+    font-size: 28px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .add-card:hover { border-color: var(--accent); color: var(--accent); }
+  .add-card span { font-size: 11px; letter-spacing: 1px; margin-top: 4px; }
+  .add-card.disabled { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+
+  .guest-limit {
+    display: none;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px 20px 28px;
+    margin-bottom: 16px;
+  }
+
+  .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--accent); }
+  .panel-actions { display: flex; gap: 4px; }
+
+  .icon-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 15px; padding: 6px 8px; border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .icon-btn:hover { color: var(--text); background: var(--border); }
+  .icon-btn.hidden { display: none; }
+
+  .big-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 100px;
+    text-align: center;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -2px;
+    margin: 12px 0 24px;
+  }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; }
+
+  .btn {
+    border: none; border-radius: 14px; padding: 14px 18px; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px;
+    transition: transform 0.1s; min-width: 64px;
+  }
+
+  .btn:active { transform: scale(0.93); }
+  .btn-primary { background: var(--accent); color: #0e0e0e; font-size: 30px; min-width: 72px; }
+  .btn-secondary { background: var(--border); color: var(--muted); }
+
+  .modal-error {
+    font-size: 11px; color: var(--red); letter-spacing: 1px;
+    margin-bottom: 12px; display: none;
+  }
+
+  .hint { text-align: center; font-size: 10px; color: var(--muted); letter-spacing: 1px; line-height: 1.8; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: #000a;
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+
+  .modal-overlay.visible { display: flex; }
+
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px;
+  }
+
+  .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--accent); margin-bottom: 16px; }
+
+  .modal input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 15px; padding: 12px 14px; outline: none; margin-bottom: 16px;
+  }
+
+  .modal input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; }
+
+  .modal-btns button {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+
+  .modal-btns .confirm { background: var(--accent); color: #0e0e0e; }
+  .modal-btns .cancel-modal { background: var(--border); color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">⬡ ZÄHLER</div>
+  <div class="login-sub">WÄHLE DEINE ROLLE</div>
+
+  <div class="role-grid">
+    <div class="role-card" id="roleAdmin" onclick="selectRole('admin')">
+      <div class="role-icon">👑</div>
+      <div class="role-name">ADMIN</div>
+      <div class="role-desc">Zähler hinzufügen, umbenennen & löschen · Passwort erforderlich</div>
+    </div>
+    <div class="role-card" id="roleGuest" onclick="selectRole('guest')">
+      <div class="role-icon">👤</div>
+      <div class="role-name">GAST</div>
+      <div class="role-desc">Zähler ändern · Max. 2 neue Zähler pro Sitzung</div>
+    </div>
+  </div>
+
+  <div class="pw-field" id="pwField">
+    <label>Admin-Passwort</label>
+    <input type="password" id="pwInput" placeholder="••••••" autocomplete="off">
+    <div class="pw-error" id="pwError">❌ Falsches Passwort!</div>
+  </div>
+
+  <button class="login-btn" id="loginBtn" onclick="doLogin()" disabled>EINLOGGEN</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo">⬡ ZÄHLER</div>
+    <div class="header-right">
+      <div class="role-badge" id="roleBadge"></div>
+      <div class="live"><div class="live-dot"></div>LIVE</div>
+    </div>
+  </header>
+
+  <div id="guestLimitMsg" class="guest-limit"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="panel" id="panel" style="display:none">
+    <div class="panel-header">
+      <div class="panel-title" id="panelTitle">—</div>
+      <div class="panel-actions">
+        <button class="icon-btn hidden" id="btnRename" title="Umbenennen" onclick="openRename()">✏️</button>
+        <button class="icon-btn" title="Zurücksetzen" onclick="resetCounter()">↺</button>
+        <button class="icon-btn hidden" id="btnDelete" title="Löschen" onclick="deleteCounter()">🗑</button>
+      </div>
+    </div>
+    <div class="big-display" id="bigDisplay">0</div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="change(-10)">−10</button>
+      <button class="btn btn-primary" onclick="change(-1)">−</button>
+      <button class="btn btn-primary" onclick="change(+1)">+</button>
+      <button class="btn btn-secondary" onclick="change(+10)">+10</button>
+    </div>
+  </div>
+
+  <p class="hint" id="hintText"></p>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>NEUER ZÄHLER</h3>
+    <input type="text" id="addNameInput" maxlength="20" placeholder="Name…">
+    <div class="modal-error" id="addDupError">❌ Name bereits vorhanden!</div>
+    <input type="number" id="addValueInput" placeholder="Startwert (Standard: 0)">
+    <div class="modal-btns">
+      <button class="confirm" onclick="confirmAdd()">Hinzufügen</button>
+      <button class="cancel-modal" onclick="cancelAdd()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename Modal -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <h3>UMBENENNEN</h3>
+    <input type="text" id="renameInput" maxlength="20" placeholder="Neuer Name…">
+    <div class="modal-btns">
+      <button class="confirm" onclick="confirmRename()">Speichern</button>
+      <button class="cancel-modal" onclick="closeRename()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const ADMIN_PASSWORD = "admin";
+  const GUEST_MAX = 2;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCNRRAYskglbGOhYYvog6ZVIiD9LtKmz6c",
+    authDomain: "zaehler-app-16537.firebaseapp.com",
+    databaseURL: "https://zaehler-app-16537-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "zaehler-app-16537",
+    storageBucket: "zaehler-app-16537.firebasestorage.app",
+    messagingSenderId: "24681611702",
+    appId: "1:24681611702:web:a61af7191b01846767c117"
+  };
+
+  const fireApp = initializeApp(firebaseConfig);
+  const db = getDatabase(fireApp);
+  const countersRef = ref(db, "counters");
+
+  let counters = {};
+  let selectedId = null;
+  let localUpdating = false;
+  let currentRole = null;
+  let selectedLoginRole = null;
+  let guestAdded = 0;
+
+  // ── LOGIN ──
+  window.selectRole = function(role) {
+    selectedLoginRole = role;
+    document.getElementById("roleAdmin").classList.toggle("selected", role === "admin");
+    document.getElementById("roleGuest").classList.toggle("selected", role === "guest");
+    document.getElementById("pwField").classList.toggle("visible", role === "admin");
+    document.getElementById("pwError").style.display = "none";
+    document.getElementById("loginBtn").disabled = false;
+    if (role === "guest") document.getElementById("pwInput").value = "";
+  };
+
+  window.doLogin = function() {
+    if (!selectedLoginRole) return;
+    if (selectedLoginRole === "admin") {
+      if (document.getElementById("pwInput").value !== ADMIN_PASSWORD) {
+        document.getElementById("pwError").style.display = "block";
+        document.getElementById("pwInput").focus();
+        return;
+      }
+    }
+    currentRole = selectedLoginRole;
+    guestAdded = 0;
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    const isAdmin = currentRole === "admin";
+    const badge = document.getElementById("roleBadge");
+    badge.textContent = isAdmin ? "👑 ADMIN" : "👤 GAST";
+    badge.className = "role-badge " + (isAdmin ? "admin" : "guest");
+    document.getElementById("btnDelete").classList.toggle("hidden", !isAdmin);
+    document.getElementById("btnRename").classList.toggle("hidden", !isAdmin);
+    document.getElementById("hintText").textContent = isAdmin
+      ? "Admin: Zähler hinzufügen, umbenennen & löschen"
+      : `Gast: Zähler ändern · Max. ${GUEST_MAX} neue Zähler pro Sitzung`;
+
+    startFirebase();
+  };
+
+  document.getElementById("pwInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.doLogin();
+  });
+
+  // ── FIREBASE ──
+  function startFirebase() {
+    onValue(countersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) { seedDefaults(); return; }
+
+      const prev = { ...counters };
+      counters = data;
+
+      if (!selectedId || !counters[selectedId]) {
+        selectedId = Object.keys(counters)[0];
+      }
+
+      renderGrid(prev);
+      renderPanel();
+      if (currentRole === "guest") updateGuestMsg();
+    });
+  }
+
+  function seedDefaults() {
+    set(countersRef, {
+      "punkte": { label: "Punkte", value: 0, order: 0 },
+      "runde":  { label: "Runde",  value: 1, order: 1 },
+      "leben":  { label: "Leben",  value: 3, order: 2 },
+    });
+  }
+
+  function updateGuestMsg() {
+    const remaining = GUEST_MAX - guestAdded;
+    const msg = document.getElementById("guestLimitMsg");
+    msg.style.display = "block";
+    msg.textContent = remaining > 0
+      ? `👤 Gast · Noch ${remaining} neue Zähler möglich`
+      : `👤 Gast · Limit von ${GUEST_MAX} neuen Zählern erreicht`;
+  }
+
+  function renderGrid(prev = {}) {
+    const grid = document.getElementById("grid");
+    const sorted = Object.entries(counters).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+
+    sorted.forEach(([id, c]) => {
+      let card = document.getElementById("card-" + id);
+      if (!card) {
+        card = document.createElement("div");
+        card.className = "card";
+        card.id = "card-" + id;
+        card.innerHTML = `<div class="card-label">${escHtml(c.label)}</div><div class="card-value">${c.value}</div>`;
+        card.addEventListener("click", () => selectCounter(id));
+        grid.insertBefore(card, document.getElementById("addCardBtn"));
+      } else {
+        card.querySelector(".card-label").textContent = c.label;
+        const valEl = card.querySelector(".card-value");
+        const oldVal = prev[id]?.value;
+        if (oldVal !== undefined && oldVal !== c.value && !localUpdating) {
+          const dir = c.value > oldVal ? "flash-up" : "flash-down";
+          card.classList.add(dir);
+          setTimeout(() => card.classList.remove(dir), 300);
+        }
+        valEl.textContent = c.value;
+      }
+      card.classList.toggle("active", id === selectedId);
+    });
+
+    grid.querySelectorAll(".card").forEach(el => {
+      if (!counters[el.id.replace("card-", "")]) el.remove();
+    });
+
+    if (!document.getElementById("addCardBtn")) {
+      const btn = document.createElement("div");
+      btn.className = "add-card";
+      btn.id = "addCardBtn";
+      btn.innerHTML = `<span>+</span><span>Neu</span>`;
+      btn.addEventListener("click", showAdd);
+      grid.appendChild(btn);
+    }
+
+    const addBtn = document.getElementById("addCardBtn");
+    const guestAtLimit = currentRole === "guest" && guestAdded >= GUEST_MAX;
+    addBtn.classList.toggle("disabled", guestAtLimit);
+  }
+
+  function renderPanel() {
+    const c = counters[selectedId];
+    if (!c) { document.getElementById("panel").style.display = "none"; return; }
+    document.getElementById("panel").style.display = "block";
+    document.getElementById("panelTitle").textContent = c.label;
+    document.getElementById("bigDisplay").textContent = c.value;
+  }
+
+  function selectCounter(id) {
+    selectedId = id;
+    document.querySelectorAll(".card").forEach(el => el.classList.toggle("active", el.id === "card-" + id));
+    renderPanel();
+  }
+
+  window.change = function(delta) {
+    if (!selectedId || !counters[selectedId]) return;
+    localUpdating = true;
+    const newVal = (counters[selectedId].value || 0) + delta;
+    const card = document.getElementById("card-" + selectedId);
+    if (card) {
+      card.classList.add(delta > 0 ? "flash-up" : "flash-down");
+      setTimeout(() => { card.classList.remove("flash-up", "flash-down"); localUpdating = false; }, 300);
+    }
+    update(ref(db, "counters/" + selectedId), { value: newVal });
+    document.getElementById("bigDisplay").textContent = newVal;
+  };
+
+  window.resetCounter = function() {
+    if (!selectedId) return;
+    if (confirm(`"${counters[selectedId]?.label}" auf 0 zurücksetzen?`)) {
+      update(ref(db, "counters/" + selectedId), { value: 0 });
+    }
+  };
+
+  window.deleteCounter = function() {
+    if (currentRole !== "admin") return;
+    if (Object.keys(counters).length <= 1) { alert("Mindestens ein Zähler muss vorhanden sein."); return; }
+    if (confirm(`"${counters[selectedId]?.label}" löschen?`)) {
+      const old = selectedId;
+      selectedId = Object.keys(counters).find(id => id !== old);
+      remove(ref(db, "counters/" + old));
+    }
+  };
+
+  window.showAdd = function() {
+    if (currentRole === "guest" && guestAdded >= GUEST_MAX) return;
+    document.getElementById("addNameInput").value = "";
+    document.getElementById("addValueInput").value = "";
+    document.getElementById("addDupError").style.display = "none";
+    document.getElementById("addModal").classList.add("visible");
+    document.getElementById("addNameInput").focus();
+  };
+
+  window.cancelAdd = function() {
+    document.getElementById("addModal").classList.remove("visible");
+  };
+
+  window.confirmAdd = function() {
+    if (currentRole === "guest" && guestAdded >= GUEST_MAX) return;
+    const name = document.getElementById("addNameInput").value.trim();
+    if (!name) return;
+    const isDuplicate = Object.values(counters).some(c => c.label.toLowerCase() === name.toLowerCase());
+    if (isDuplicate) {
+      document.getElementById("addDupError").style.display = "block";
+      document.getElementById("addNameInput").focus();
+      return;
+    }
+    const rawVal = document.getElementById("addValueInput").value;
+    const initVal = rawVal === "" ? 0 : parseInt(rawVal, 10);
+    const newRef = push(countersRef);
+    set(newRef, { label: name, value: isNaN(initVal) ? 0 : initVal, order: Object.keys(counters).length });
+    selectedId = newRef.key;
+    if (currentRole === "guest") { guestAdded++; updateGuestMsg(); }
+    cancelAdd();
+  };
+
+  window.openRename = function() {
+    if (currentRole !== "admin" || !selectedId) return;
+    document.getElementById("renameInput").value = counters[selectedId]?.label || "";
+    document.getElementById("renameModal").classList.add("visible");
+    document.getElementById("renameInput").focus();
+  };
+
+  window.closeRename = function() { document.getElementById("renameModal").classList.remove("visible"); };
+
+  window.confirmRename = function() {
+    const name = document.getElementById("renameInput").value.trim();
+    if (!name || !selectedId) return;
+    update(ref(db, "counters/" + selectedId), { label: name });
+    closeRename();
+  };
+
+  document.getElementById("addNameInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.confirmAdd();
+    if (e.key === "Escape") window.cancelAdd();
+  });
+
+  document.getElementById("addValueInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.confirmAdd();
+    if (e.key === "Escape") window.cancelAdd();
+  });
+
+  document.getElementById("renameInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") window.confirmRename();
+    if (e.key === "Escape") window.closeRename();
+  });
+
+  function escHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+</body>
+</html>
